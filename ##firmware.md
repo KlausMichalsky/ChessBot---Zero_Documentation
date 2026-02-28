@@ -176,6 +176,7 @@ struct HomingConfig
     int enablePin;
 };
 
+// Configuracion de Homing para cada motor, con parámetros mecánicos específicos
 // Para funciones:
 // Originalmente inline se usaba para funciones.
 // Le dice al compilador: “podés insertar el código de la función directamente donde se llama, en vez de hacer una llamada normal”.
@@ -199,7 +200,7 @@ inline const HomingConfig motor1Config = {
     .slowSpeed = 800.0,
     .acceleration = 1000.0,
     .steps90Deg = motor1Config.microstepping * motor1Config.stepsPerRevolution / 4,
-    .timeout = 15000,
+    .timeout = 15000, // 15 seg
     .enablePin = MOTOR1_ENABLE};
 
 inline const HomingConfig motor2Config = {
@@ -210,10 +211,19 @@ inline const HomingConfig motor2Config = {
     .slowSpeed = 533.0,
     .acceleration = 1000.0,
     .steps90Deg = motor2Config.microstepping * motor2Config.stepsPerRevolution / 4,
-    .timeout = 15000,
+    .timeout = 15000, // 15 seg
     .enablePin = MOTOR2_ENABLE};
 
-// Aqui agregar más configuraciones de motores si es necesario
+inline const HomingConfig motor3Config = {
+    .microstepping = 8,
+    .reduction = 1,
+    .stepsPerRevolution = 200,
+    .fastSpeed = 4000.0,
+    .slowSpeed = 500.0,
+    .acceleration = 1000.0,
+    .stepsLimit = -100, // pasos máximos si arranca fuera del imán
+    .timeout = 12000,
+    .enablePin = MOTOR3_ENABLE};
 ```
 
 
