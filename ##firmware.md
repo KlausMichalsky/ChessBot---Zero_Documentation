@@ -18,6 +18,17 @@ firmware.
 | ------------------------------------------------------- |
 | Variables de estado, contadores, temporizadores, flags  |
 
+| Tipo             | Dónde va                 | Qué contiene                                                                                  |
+|-----------------|--------------------------|------------------------------------------------------------------------------------------------|
+| Config           | `config.h`               | Comandos (`Command`), estructuras de configuración (`HomingConfig`), pines, velocidades, microstepping, límites |
+| Hardware / motor | `homingXY.cpp` / `homingZ.cpp` | Variables de estado (`HomingStateXY`, `HomingStateZ`), `Start()`, `Update()`, lógica de homing |
+| Coordinación     | `core.cpp`               | Secuencias globales (`HOME_ALL`), máquinas de estado globales (no internas de motor), llamadas a `Start()` y chequeo de `state` |
+
+| Archivo      | Qué haces                              | Resultado                                               |
+| ------------ | -------------------------------------- | ------------------------------------------------------- |
+| core.cpp     | `HomingRunTimeXY homingMotor1;`        | Reserva memoria y crea la variable                      |
+| core.h       | `extern HomingRunTimeXY homingMotor1;` | Permite que otros archivos accedan a la variable        |
+| otro archivo | `#include "core.h"`                    | Puede leer/escribir `homingMotor1` sin definirla otra vez |
 
 ### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> ChessBot---Zero.ino**
 
