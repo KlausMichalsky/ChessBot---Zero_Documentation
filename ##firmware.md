@@ -30,6 +30,47 @@ firmware.
 | core.h       | `extern HomingRunTimeXY homingMotor1;` | Permite que otros archivos accedan a la variable        |
 | otro archivo | `#include "core.h"`                    | Puede leer/escribir `homingMotor1` sin definirla otra vez |
 
+📦 Arquitectura correcta
+main_zero.ino
+      │
+      ▼
+     core
+      │
+ ┌────┴─────┐
+ │          │
+motors   homingXY / homingZ
+ │          │
+drivers   sensores Hall
+core decide qué hacer y cuando hacerlo
+homing ejecuta el algoritmo
+motors mueve el hardware
+
+🧠 Responsabilidad de cada módulo
+motors
+Debe encargarse solo del hardware del motor:
+AccelStepper
+setSpeed()
+setAcceleration()
+run()
+pines STEP / DIR / ENABLE
+Es decir: control físico del motor.
+homingXY / homingZ
+Se encargan de la lógica del algoritmo de homing:
+máquina de estados
+detección de flancos
+cálculo del centro
+control del sensor Hall
+Pero no deberían poseer las variables globales del sistema.
+core
+core es el cerebro del robot físico.
+Ahí:
+coordinás motores
+ejecutás secuencias
+controlás HOME_ALL
+actualizás estados
+decidís qué sistema corre en cada loop
+Entonces las variables runtime del sistema deben vivir aquí.
+
 ### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> ChessBot---Zero.ino**
 
 ...
