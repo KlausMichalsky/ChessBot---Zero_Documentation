@@ -71,6 +71,19 @@ actualizás estados
 decidís qué sistema corre en cada loop
 Entonces las variables runtime del sistema deben vivir aquí.
 
+# ⭐ Convenciones de nomenclatura
+| Tipo        | Estilo        | Ejemplo              |
+|--------------|--------------|----------------------|
+| Struct       | PascalCase   | `HomingState`        |
+| Enum         | PascalCase   | `HomingStatus`       |
+| Enum values  | MAYÚSCULAS   | `HOMING_OK`          |
+| Funciones    | camelCase    | `updateHoming()`     |
+|              | (moduloAccionObjetoSufijo)          |
+| Variables    | camelCase    | `motorSpeed`         |
+| Constantes   | MAYÚSCULAS   | `MAX_SPEED`          |
+| Archivos     | snake_case   | `homing_manager.cpp` |
+
+
 ### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> ChessBot---Zero.ino**
 
 ...
