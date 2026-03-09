@@ -90,13 +90,7 @@ Entonces las variables runtime del sistema deben vivir aquí.
 
 --------------------------------------------------------------------------
 
-### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> calc.h / calc.cpp**
-
-...
-
---------------------------------------------------------------------------
-
-### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> commands.h / commands.cpp**
+### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> command.h / command.cpp**
 
 ...
 
@@ -108,7 +102,7 @@ Entonces las variables runtime del sistema deben vivir aquí.
 
 --------------------------------------------------------------------------
 
-### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> config.h / config.h**
+### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> config.h**
 ```c
 #pragma once
 #include <Arduino.h>
@@ -291,27 +285,83 @@ inline const HomingConfig motor3Config = {
     .enablePin = MOTOR3_ENABLE};
 ```
 
+...
 
 --------------------------------------------------------------------------
 
-### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> homingXY.h / homingXY.cpp**
+
+
+### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> core.h / core.cpp**
 
 ...
 
 --------------------------------------------------------------------------
 
-### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> motorsXY.h / motorsXY.cpp**
+### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> homing.h / homing.cpp**
+
+...
+
+--------------------------------------------------------------------------
+
+### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> motors.h / motors.cpp**
 
 ...
 
 --------------------------------------------------------------------------
 
 ### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> sensors.h / sensors.cpp**
+// Si alguna vez tu homing mecanico cae cerca del 0 digital del sensor:
+// entonces el promedio normal se rompe
+// Mejor solucion:
+// 30 lecturas + corrección si cruza 0° + promedio 👀💡
+//         0°
+//    330°     30°
+//  300°         60°
+//  270°         90°
+//  240°        120°
+//   210°      150°
+//         180°
+float sensorHomingOffset(TwoWire &wire)
+{
+    const uint8_t samples = 30;
+    float sum = 0;
+    float firstAngle = rawToDegrees(sensorReadAngle(wire));
 
+    for (uint8_t i = 0; i < samples; i++)
+    {
+        float angle = rawToDegrees(sensorReadAngle(wire));
+        // corregir salto 0° / 360°
+        // fabs -> valor absoluto |angle - firstAngle|
+        // Si la diferencia es mayor que 180°,
+        // significa que cruzamos el cero del sensor.
+        // si cruzamos el cero
+        // mover los valores al mismo lado del círculo
+        if (fabs(angle - firstAngle) > 180)
+        {
+            if (angle < firstAngle)
+                angle += 360;
+            else
+                angle -= 360;
+        }
+        sum += angle;
+    }
+    // Normalizar el angulo si el promedio queda fuera del rango
+    // Eso solo mueve el número al rango correcto
+    // Si un cálculo da 361° eso en realidad es lo mismo que 1°
+    // si pasa de 360 → restar 360, si es menor que 0 → sumar 360
+    float offset = sum / samples;
+
+    if (offset >= 360)
+        offset -= 360;
+    if (offset < 0)
+        offset += 360;
+
+    return offset;
+}
 ...
 
 --------------------------------------------------------------------------
 
+### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> utils.h / utils.cpp**
 
-
-
+...
