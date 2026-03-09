@@ -84,6 +84,19 @@ Entonces las variables runtime del sistema deben vivir aquí.
 | Archivos     | snake_case   | `homing_manager.cpp` |
 
 
+// Declaraciones externas de las variables globales
+// 1️⃣ Qué hace extern
+// extern le dice al compilador:
+// “Esta variable existe en otro lugar, no la declares de nuevo aquí, solo quiero usarla.”
+// Es una declaración, no una definición.
+// Declaración (extern) → solo le dice al compilador “la variable existe en algún lado, confía en mí”.
+// Definición → realmente reserva memoria para la variable.
+// 2️⃣ Por qué se pone extern en el .h
+// El .h se incluye en varios archivos (.ino, otros .cpp).
+// Si ponemos extern en el .h, todos los archivos que incluyan ese .h sabrán que la variable existe pero no crearán una copia.
+// Esto evita errores de “variable ya definida” (multiple definition).
+
+
 ### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> ChessBot---Zero.ino**
 
 ...
