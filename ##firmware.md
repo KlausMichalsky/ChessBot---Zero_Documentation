@@ -6,95 +6,136 @@ firmware.
 - Definición de tipos de datos del sistema.
 - Declaración de variables y constantes.
 - Mantención de arquitectura limpia.
-- Evitar colisiones y errores por tipos inseguros.
 
-## **➡️ Contenido de Archivos**
+## ⭐ Convenciones de nomenclatura
+| Tipo                             | Estilo                   | Ejemplo                 |
+| -------------------------------- | ------------------------ | ----------------------- |
+| Struct                           | PascalCase               | `HomingState`           |
+| Enum                             | PascalCase               | `HomingStatus`          |
+| Enum values                      | MAYÚSCULAS               | `HOMING_OK`             |
+| Funciones                        | camelCase                | `updateHoming()`        |
+| Funciones (convención extendida) | moduloAccionObjetoSufijo | `motorUpdatePosition()` |
+| Variables                        | camelCase                | `motorSpeed`            |
+| Constantes                       | MAYÚSCULAS               | `MOTOR1_ENABLE`         |
+| Archivos                         | snake_case               | `homing_manager.cpp`    |
+| Clases                           | PascalCase               | `HomingManager`         |
+| Namespaces                       | snake_case               | `motor_control`         |
+| Getters                          | get + camelCase          | `getPosition()`         |
+| Setters                          | set + camelCase          | `setSpeed()`            |
+| Variables globales               | prefijo g_ -> "esto es global"              | `g_motorSpeed`          |
+| Miembros privados                | prefijo _ -> “esto NO se toca desde afuera”                | `_encoderCount`         |
+| Booleanos                        | is / has / can           | `isHomed`, `hasError`   |
+| ISR (interrupciones)             | prefijo ISR_             | `ISR_encoderA()`        |
+| Macros                           | MAYÚSCULAS + _           | `MOTOR_MAX_SPEED`       |
 
-| Contenido de archivos `*.h`                                      |
-| ------------------------------------------------------- |
-| Constantes, direcciones, límites, parámetros ajustables, declaracion de funciones |
+## 🔎 Contenido de Archivos
 
-| Contenido de archivos `*.cpp` / `*.ino`                          |
-| ------------------------------------------------------- |
-| Variables de estado, contadores, temporizadores, flags, definicion de  |
+| 📁 Contenido de archivos (headers)`*.h`                                                                                        |
+| ---------------------------------------------------------------------------------------------------------------------- |
+| Constantes, definiciones, direcciones, límites del sistema, parámetros ajustables y declaraciones de funciones/clases. |
 
-| Tipo             | Dónde va                 | Qué contiene                                                                                  |
-|-----------------|--------------------------|------------------------------------------------------------------------------------------------|
-| Config           | `config.h`               | Comandos (`Command`), estructuras de configuración (`HomingConfig`), pines, velocidades, microstepping, límites |
-| Hardware / motor | `homingXY.cpp` / `homingZ.cpp` | Variables de estado (`HomingStateXY`, `HomingStateZ`), `Start()`, `Update()`, lógica de homing |
-| Coordinación     | `core.cpp`               | Secuencias globales (`HOME_ALL`), máquinas de estado globales (no internas de motor), llamadas a `Start()` y chequeo de `state` |
-
-| Archivo      | Qué haces                              | Resultado                                               |
-| ------------ | -------------------------------------- | ------------------------------------------------------- |
-| core.cpp     | `HomingRunTimeXY homingMotor1;`        | Reserva memoria y crea la variable                      |
-| core.h       | `extern HomingRunTimeXY homingMotor1;` | Permite que otros archivos accedan a la variable        |
-| otro archivo | `#include "core.h"`                    | Puede leer/escribir `homingMotor1` sin definirla otra vez |
-
-📦 Arquitectura correcta
-main_zero.ino
-      │
-      ▼
-     core
-      │
- ┌────┴─────┐
- │          │
-motors   homingXY / homingZ
- │          │
-drivers   sensores Hall
-core decide qué hacer y cuando hacerlo
-homing ejecuta el algoritmo
-motors mueve el hardware
-
-🧠 Responsabilidad de cada módulo
-motors
-Debe encargarse solo del hardware del motor:
-AccelStepper
-setSpeed()
-setAcceleration()
-run()
-pines STEP / DIR / ENABLE
-Es decir: control físico del motor.
-homingXY / homingZ
-Se encargan de la lógica del algoritmo de homing:
-máquina de estados
-detección de flancos
-cálculo del centro
-control del sensor Hall
-Pero no deberían poseer las variables globales del sistema.
-core
-core es el cerebro del robot físico.
-Ahí:
-coordinás motores
-ejecutás secuencias
-controlás HOME_ALL
-actualizás estados
-decidís qué sistema corre en cada loop
-Entonces las variables runtime del sistema deben vivir aquí.
-
-# ⭐ Convenciones de nomenclatura
-| Tipo        | Estilo        | Ejemplo              |
-|--------------|--------------|----------------------|
-| Struct       | PascalCase   | `HomingState`        |
-| Enum         | PascalCase   | `HomingStatus`       |
-| Enum values  | MAYÚSCULAS   | `HOMING_OK`          |
-| Funciones    | camelCase    | `updateHoming()`     |
-|              | (moduloAccionObjetoSufijo)          |
-| Variables    | camelCase    | `motorSpeed`         |
-| Constantes   | MAYÚSCULAS   | `MAX_SPEED`          |
-| Archivos     | snake_case   | `homing_manager.cpp` |
+| 📁 Contenido de archivos `*.cpp` / `*.ino`                                                                                                                   |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Implementación de funciones, lógica del sistema, variables de estado (si son internas del módulo), contadores, temporizadores, flags y código ejecutable. |
 
 
-// Declaraciones externas de las variables globales
-// 1️⃣ Qué hace extern
-// extern le dice al compilador:
-// “Esta variable existe en otro lugar, no la declares de nuevo aquí, solo quiero usarla.”
-// Es una declaración, no una definición.
-// Declaración (extern) → solo le dice al compilador “la variable existe en algún lado, confía en mí”.
-// Definición → realmente reserva memoria para la variable.
-// 2️⃣ Por qué se pone extern en el .h
-// El .h se incluye en varios archivos (.ino, otros .cpp).
-// Si ponemos extern en el .h, todos los archivos que incluyan ese .h sabrán que la variable existe pero no crearán una copia.
-// Esto evita errores de “variable ya definida” (multiple definition).
+| Tipo             | Dónde va                       | Qué contiene                                                                                                                                                   |
+| ---------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Config           | `config.h`                     | Pines, velocidades, microstepping, límites del sistema, estructuras de configuración (`MotorConfig`, `HomingConfig`, etc.), enums de comandos (`Command`)      |
+| Hardware / motor | `homingXY.cpp` / `homingZ.cpp` | Lógica del homing, máquinas de estado (`HomingStateXY`, `HomingStateZ`), funciones `Start()`, `Step()/Update()`, lectura de sensores y control del motor       |
+| Coordinación     | `core.cpp`                     | Secuencias globales (`HOME_ALL`), coordinación entre motores, máquinas de estado globales del sistema y llamadas a `Start()` / `Step()` con chequeo de estados |
+
+| Archivo      | Qué haces                              | Resultado                                      |
+| ------------ | -------------------------------------- | ---------------------------------------------- |
+| `core.cpp`   | `HomingRunTimeXY homingMotor1;`        | Se **define** la variable (reserva memoria)    |
+| `core.h`     | `extern HomingRunTimeXY homingMotor1;` | Se **declara** la variable para otros archivos |
+| otros `.cpp` | `#include "core.h"`                    | Permite acceder a la variable sin redefinirla  |
+
+## 📦 Arquitectura de modulos
+
+| Módulo                                | Función                                                                                 |
+| ------------------------------------- | --------------------------------------------------------------------------------------- |
+| `ChessBot---Zero.ino`                 | Punto de entrada del firmware Arduino. Inicializa `core` y arranca el loop principal.   |
+| `core.cpp / core.h`                   | Cerebro del sistema. Coordina todos los módulos y define el flujo general del robot.    |
+| `config.h`                            | Configuración global: pines, límites, velocidades, constantes y parámetros del sistema. |
+| `command.cpp / command.h`             | Interpretación de comandos (parser + definición de comandos del sistema).               |
+| `communication.cpp / communication.h` | Comunicación con el exterior (Serial / UART / posibles interfaces futuras).             |
+| `homing.cpp / homing.h`               | Algoritmo de homing: máquina de estados, detección de sensores y cálculo de referencia. |
+| `motors.cpp / motors.h`               | Control físico de motores (STEP/DIR/ENABLE, velocidad, aceleración).                    |
+| `sensors.cpp / sensors.h`             | Lectura de sensores (Hall, finales de carrera, inputs físicos).                         |
+| `xy_plane.cpp / xy_plane.h`           | Control de cinemática/plano XY (movimientos coordinados en dos ejes).                   |
+| `z_axis.cpp / z_axis.h`               | Control del eje Z (movimiento vertical independiente).                                  |
+| `utils.cpp / utils.h`                 | Funciones auxiliares reutilizables (helpers, cálculos, herramientas generales).         |
+
+## 🔁 Flujo del sistema
+
+| Nivel                 | Qué hace                                            |
+| --------------------- | --------------------------------------------------- |
+| `ChessBot---Zero.ino` | Inicializa el sistema y entra en el loop principal  |
+| `communication`       | Recibe datos/comandos desde el exterior             |
+| `command`             | Interpreta los comandos recibidos                   |
+| `core`                | Decide qué acción ejecutar según estado del sistema |
+| `homing`              | Ejecuta calibración de ejes si es necesario         |
+| `xy_plane / z_axis`   | Convierte órdenes en movimiento por eje             |
+| `motors`              | Ejecuta movimiento físico real                      |
+| `sensors`             | Retroalimentación del estado físico                 |
+| `utils`               | Soporte transversal en cualquier etapa              |
+
+## 🔖 Responsabilidad de cada módulo
+| Módulo                | Responsabilidad                                                        | Qué NO debe hacer                                           |
+| --------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `core`                | Control central del sistema, estados globales, coordinación de módulos | No debe manejar detalles eléctricos ni lógica de bajo nivel |
+| `command`             | Definir y parsear comandos del sistema                                 | No debe controlar hardware directamente                     |
+| `communication`       | Entrada/salida de datos (Serial, protocolos)                           | No debe interpretar lógica del robot                        |
+| `homing`              | Algoritmo de referencia (máquina de estados, detección de sensores)    | No debe decidir movimientos globales del sistema            |
+| `motors`              | Control físico de motores                                              | No debe contener lógica de homing o planificación           |
+| `sensors`             | Lectura de sensores físicos                                            | No debe tomar decisiones                                    |
+| `xy_plane`            | Movimiento coordinado XY (cinemática / planificación local)            | No debe tocar drivers directamente                          |
+| `z_axis`              | Control del eje Z                                                      | No debe coordinar otros ejes                                |
+| `utils`               | Funciones auxiliares reutilizables                                     | No debe depender del estado del robot                       |
+| `config`              | Parámetros globales                                                    | No debe contener lógica                                     |
+| `ChessBot---Zero.ino` | Arranque del sistema                                                   | No debe contener lógica compleja                            |
+
+## 🧩 Idea clave de la arquitectura
+| Capa                | Rol                            |
+| ------------------- | ------------------------------ |
+| `communication`     | 🌐 Entrada de datos            |
+| `command`           | 🧾 Interpretación              |
+| `core`              | 🧠 Decisión central            |
+| `homing`            | 🔍 Calibración                 |
+| `xy_plane / z_axis` | 🧭 Planificación de movimiento |
+| `motors`            | 🦾 Ejecución física            |
+| `sensors`           | 👁 Feedback del mundo real     |
+| `utils`             | 🧰 Soporte general             |
+
+## **🧠 Resumen mental del sistema**
+* communication → recibe información
+* command → la traduce
+* core → decide qué hacer
+* homing → calibra si hace falta
+* xy_plane / z_axis → convierten decisiones en movimiento
+* motors → mueven el robot
+* sensors → confirman la realidad
+
+
+## 🌍 Variables globales y `extern`
+
+### 1️⃣ ¿Qué hace `extern`?
+
+`extern` le dice al compilador:
+
+> “Esta variable existe en otro archivo, solo quiero usarla aquí, no la crees otra vez.”
+
+---
+
+### 🧠 Diferencia clave
+
+| Tipo | Significado |
+|------|-------------|
+| **Declaración (`extern`)** | Solo informa que la variable existe |
+| **Definición** | Crea la variable y reserva memoria |
+
+---
 
 
 ### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> ChessBot---Zero.ino**
@@ -533,14 +574,15 @@ HomingStateZ homingGetStateZ(const HomingZ &st);
 #include "sensors.h"
 ```
 ```c
-// CONSTANTES INTERNAS DEL MÓDULO
+// 🔹 CONSTANTES INTERNAS DEL MÓDULO
 // =======================================================================
 // static → visibles solo dentro de este archivo (.cpp)
 static const int8_t CW = 1;   // ClockWise plano XY
 static const int8_t CCW = -1; // Counter-ClockWise plano XY
 static const int8_t dir = 1;  // Dirección inicial eje Z
-
-// VARIABLES INTERNAS DEL MODULO
+```
+```c
+// 🔹 VARIABLES INTERNAS DEL MODULO
 // =======================================================================
 // Instancias del controlador de homing
 // Estos objetos se encarga de ejecutar la secuencia completa de homing
@@ -565,7 +607,7 @@ HomeSingleState homeSingleState = HomeSingleState::IDLE;
 MotorID motorToHome = MotorID::NONE;
 ```
 ```c
-// INICIALIZACIÓN DEL ESTADO DE HOMING
+// 🔹 INICIALIZACIÓN DEL ESTADO DE HOMING
 // =======================================================================
 // Inicializa la estructura de homing dejando todos los parámetros 
 // en un estado seguro y conocido antes de iniciar el proceso.
@@ -588,7 +630,7 @@ void homingInitZ(HomingZ &st) {
 }
 ```
 ```c
-// INICIO DEL PROCESO DE HOMING
+// 🔹 INICIO DEL PROCESO DE HOMING
 // =======================================================================
 // Inicia la secuencia de homing plano XY
 // Configura el motor, habilita el driver y coloca la máquina de estados
@@ -678,7 +720,7 @@ void homingStartZ(AccelStepper &motor,
 }
 ```
 ```c
-// HOMING ACTIVO?
+// 🔹 HOMING ACTIVO?
 // =======================================================================
 // Retorna true si la máquina de estados NO está en inactiva,
 // lo que significa que hay un proceso de homing en curso.
@@ -690,7 +732,7 @@ bool homingZisActive(const HomingZ &st) {
 }
 ```
 ```c
-// PREGUNTAR ESTADO ACTUAL DEL HOMING
+// 🔹 PREGUNTAR ESTADO ACTUAL DEL HOMING
 // =======================================================================
 // Se usa para consultar en qué fase del proceso está el homing
 // (ej: INACTIVE, SEARCH_FAST_CW, SEARCH_SLOW, CENTERING, etc.).
@@ -703,7 +745,7 @@ HomingStateZ homingGetStateZ(const HomingZ &st) {
 }
 ```
 ```c
-// COMPROBAR SI HUBO ERROR EN HOMING
+// 🔹 COMPROBAR SI HUBO ERROR EN HOMING
 // =======================================================================
 // Retorna true si el flag fault está activo, lo que significa
 // que ocurrió una falla durante el proceso de homing (timeout,
@@ -716,7 +758,7 @@ bool homingZhasError(const HomingZ &st) {
 }
 ```
 ```c
-// MÁQUINA DE ESTADOS DE HOMING
+// 🔹 MÁQUINA DE ESTADOS DE HOMING
 // =======================================================================
 // Ejecuta solo UN paso de la máquina de estados del homing
 // Esta función debe llamarse de forma cíclica para avanzar
