@@ -2,7 +2,7 @@
 
 Este documento define las reglas fundamentales de diseño del
 firmware.
-- Contenido de archivos
+- Contenido de archivos.
 - Definición de tipos de datos del sistema.
 - Declaración de variables y constantes.
 - Mantención de arquitectura limpia.
