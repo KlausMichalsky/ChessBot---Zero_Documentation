@@ -145,28 +145,35 @@ firmware.
 
 --------------------------------------------------------------------------
 
-### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> command.h / command.cpp**
+### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> command.h**
+
+- Declaración de funciones para la gestión de comandos  recibidos por UART
+
+```c
+#pragma once
+
+#include <Arduino.h>
+
+#include "config.h"
+```
+```c
+bool commandAvailable();
+void processCommand(const String &command);
+String readCommand();
+void commandSendStatusReport();
+```
+
+
+### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> command.cpp**
 
 ...
 
---------------------------------------------------------------------------
-
-<<<<<<< HEAD
-### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> command.h / command.cpp**
-
-...
 
 --------------------------------------------------------------------------
 
-### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> communication.h / communication.cpp**
-
-...
-
---------------------------------------------------------------------------
-
-### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> config.h**
-=======
 ### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> communication.h**
+
+- Declaracion de la interfaz de comunicación UART
 
 ```c
 #pragma once
@@ -178,6 +185,10 @@ void communicationInit();
 ```
 
 ### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> communication.cpp**
+
+- Inicializar UART
+- Comunicación UART con el Raspberry
+- Gestionar la recepción de datos de forma no bloqueante
 
 ```c
 #include <Arduino.h>
@@ -208,11 +219,16 @@ void communicationInit() {
 }
 ```
 
-
 --------------------------------------------------------------------------
 
 ### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> config.h**
->>>>>>> 287525e (homing)
+
+- Declaracion de pines fisicos, constantes y tipos de datos.
+- Declaracion de parametros globales.
+- Declaracion de enums de estados.
+- Declaracion de estructuras de configuración de motores.
+- Centralizar parámetros mecánicos dependientes del hardware.
+
 ```c
 #pragma once
 #include <Arduino.h>
@@ -258,7 +274,7 @@ void communicationInit() {
 ```c
 // 🔹 PARAMETROS DE CONFIGURACIÓN DEL EJE Z
 // =======================================================================
-#define Z_STEPS_DOWN 11600 // cantidad de pasos para bajar
+#define Z_STEPS_DOWN 12600 // cantidad de pasos para bajar
 #define Z_DELAY 100        // delay entre movimientos para darle tiempo al iman
 
 ```
@@ -449,32 +465,27 @@ inline constexpr MotorConfig motor3Config = {
     .enablePin = MOTOR3_ENABLE};
 ```
 
-...
-
 --------------------------------------------------------------------------
 
-<<<<<<< HEAD
 
+### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> core.h**
+...
 
-### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> core.h / core.cpp**
-=======
-### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> core.h / core.cpp**
->>>>>>> 287525e (homing)
+### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> core.cpp**
 
 ...
 
---------------------------------------------------------------------------
-
-<<<<<<< HEAD
-### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> homing.h / homing.cpp**
-
-...
 
 --------------------------------------------------------------------------
 
-### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> motors.h / motors.cpp**
-=======
 ### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> homing.h**
+
+- Declarar la estructura de estado del homing
+- Proporcionar funciones públicas para inicializar y ejecutar la
+  rutina de homing.
+- Permitir consultar el estado actual y detectar errores.
+- Servir como interfaz para otros módulos del robot que requieran
+  funcionalidad de homing.
 
 ```c
 #pragma once
@@ -563,6 +574,12 @@ HomingStateZ homingGetStateZ(const HomingZ &st);
 
 
 ### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> homing.cpp**
+
+- Ejecutar la máquina de estados de homing
+  para motor1-2 (XY) y motor3 (Z).
+- Detectar flancos del imán mediante sensor Hall.
+- Calcular el centro/referencia y posicionar motores.
+- Gestionar errores y timeouts de homing.
 
 ```c
 #include <Arduino.h>
@@ -960,15 +977,252 @@ void homingStepZ(AccelStepper &motor,
 
 --------------------------------------------------------------------------
 
-### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> motors.h / motors.cpp**
->>>>>>> 287525e (homing)
+
+### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> motors.h**
+...
+
+### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> motors.cpp**
+
 
 ...
 
 --------------------------------------------------------------------------
 
-<<<<<<< HEAD
-### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> sensors.h / sensors.cpp**
+
+### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> sensors.h**
+
+- Declaración de funciones y constantes para el manejo
+  de sensores del robot de ajedrez.
+- Proveer prototipos de funciones de inicialización y lectura.
+- Definir constantes y macros para sensores.
+- Servir de interfaz clara para el resto del proyecto.
+
+```c
+#pragma once
+
+#include <Arduino.h>
+#include <Wire.h>
+```
+```c
+// 🔹 DECLARACIONE DE VARIABLES GLOBALES (extern -> sin duplicar instancias)
+// =======================================================================
+
+extern float lastSentAngle_1;
+extern unsigned long lastSendTime_1;
+extern float lastSentAngle_2;
+extern unsigned long lastSendTime_2;
+// lastSentAngle_1 / lastSentAngle_2
+// Último ángulo enviado para cada sensor. 
+// Se utiliza para evitar envíos redundantes cuando no hay cambios significativos.
+// lastSendTime_1 / lastSendTime_2
+// Marca de tiempo del último envío de datos de cada sensor (en milisegundos).
+// Permite controlar la frecuencia de transmisión.
+
+extern float sensor1Offset;
+extern float sensor2Offset;
+// sensor1Offset / sensor2Offset
+// Offset angular calculado durante el proceso de homing. 
+// Representa la diferencia entre la posición real del sensor y 
+// la posición de referencia (cero mecánico).
+
+extern float sensor1Angle;
+extern float sensor2Angle;
+// sensor1Angle / sensor2Angle
+// Ángulo del sensor una vez aplicado el offset de calibración. 
+// Este es el valor final utilizado por el sistema de control
+
+void sensorsInit();
+// Inicializa los sensores angulares y configura la comunicación (I2C). 
+// Debe llamarse al inicio del sistema.
+
+uint16_t sensorReadAngle(TwoWire &wire);
+// Lee el valor crudo del ángulo desde el sensor a través del bus I2C. 
+// Devuelve el dato sin procesar.
+
+void sensorStreamAngle(TwoWire &wire, float &lastSentAngle, unsigned long &lastSendTime)
+// Envía el ángulo del sensor de forma continua, 
+// controlando cambios mínimos y tiempo entre envíos para optimizar la comunicación.
+
+void sensorSendAngle(TwoWire &wire)
+// Envía el ángulo actual del sensor sin aplicar 
+// lógica de filtrado o control de frecuencia.
+
+float sensorHomingOffset(TwoWire &wire)
+// Calcula el offset del sensor durante el proceso de homing. 
+// Este valor se usa como referencia para corregir lecturas futuras.
+
+float sensorCorrectedAngle(TwoWire &wire, float offset)
+// Devuelve el ángulo corregido aplicando el offset previamente calculado. 
+// Este valor representa la posición real del sistema.
+```
+
+### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> sensors.cpp**
+
+- Inicializar y configurar sensores.
+- Implementación de funciones para la lectura y gestión de
+  sensores AS5600.
+
+#####  🔀 Una Direccion, dos buses I2C diferentes
+
+    ✏️ Descripción:
+    Direccion común pero perifericos I2C distintos
+    Porque aunque ambos sensores tengan dirección 0x36, están en buses físicos diferentes. Es como tener dos calles distintas con la misma numeración
+
+    🧩 Implementación:
+    Sensor 1 → pines 4 y 5
+    Sensor 2 → pines 26 y 27
+    En el RP2040 eso significa que se están usando dos controladores I2C distintos:
+    Wire (I2C0)
+    Wire1 (I2C1)
+
+    ⚠️ La direccion es la misma para ambos sensores:
+
+```c
+#include <Arduino.h>
+
+#include "config.h"
+#include "sensors.h"
+#include "utils.h"
+```
+```c
+// 🔹 VARIABLES INTERNAS DEL MÓDULO ❌ Mover estas variables a core❓
+// ⚠️ Nota: Estas variables actualmente están dentro del módulo de sensores, 
+// pero pueden ser movidas al core del sistema si se requiere centralizar 
+// el estado global.
+// =======================================================================
+
+unsigned long lastSendTime_1 = 0;
+float lastSentAngle_1 = -1000.0f; 
+unsigned long lastSendTime_2 = 0;
+float lastSentAngle_2 = -1000.0f;
+// lastSendTime_1 / lastSendTime_2
+// Almacenan el tiempo (en milisegundos) del último envío de datos de cada sensor.
+// Se utilizan para limitar la frecuencia de transmisión y evitar saturar la comunicación.
+// lastSentAngle_1 / lastSentAngle_2
+// Guardan el último ángulo enviado.
+// Se emplean para detectar cambios y evitar envíos redundantes 
+// si el valor no varía significativamente.
+// Inicializados en -1000.0 como valor imposible, 
+// garantizando que el primer envío siempre se realice.
+// ¿Por qué -1000?
+// Porque es un valor imposible (el AS5600 solo va de 0 a 360).
+// Entonces el primer envío siempre ocurre.
+
+float sensor1Offset = 0;
+float sensor2Offset = 0;
+// sensor1Offset / sensor2Offset
+// Offset angular calculado durante el proceso de homing.
+// Representa la diferencia entre la posición física real y la referencia de cero del sistema.
+
+float sensor1Angle = 0;
+float sensor2Angle = 0;
+// sensor1Angle / sensor2Angle
+// Ángulo actual del sensor después de aplicar el offset.
+// Este valor ya está listo para ser usado por el sistema de control de movimiento.
+```
+ ##### Este diagrama explica cómo se decide enviar un ángulo del sensor AS5600 solo cuando cambia:
+
+<p align="center">
+  <img src="img/diagrama_de_angulos.png" alt="Diagrama de envío de ángulo" width="400">
+</p>
+
+```c
+// 🔹 INICIALIZACIÓN DEL MÓDULO DE SENSORES
+// =======================================================================
+void sensorsInit() {
+    pinMode(HALL_1, INPUT_PULLUP);
+    pinMode(HALL_2, INPUT_PULLUP);
+    pinMode(HALL_3, INPUT_PULLUP);
+
+    Wire.setSDA(AS5600_1_SDA);
+    Wire.setSCL(AS5600_1_SCL);
+    Wire.begin();
+    Wire1.setSDA(AS5600_2_SDA);
+    Wire1.setSCL(AS5600_2_SCL);
+    Wire1.begin();
+}
+```
+```c
+
+// 🔹 LECTURA DE SENSORES (BAJO NIVEL)
+// =======================================================================
+// Lee el ángulo crudo desde el sensor AS5600 vía I2C
+// TwoWire → le decimos “la función va a recibir un objeto de tipo TwoWire”.
+// &wire → le decimos “pasalo por referencia, no por copia”.
+uint16_t sensorReadAngle(TwoWire &wire) {
+    // Inicia la comunicación con el sensor y selecciona el registro 0x0E, 
+    // donde se encuentra el valor del ángulo.
+    wire.beginTransmission(AS5600_ADDR);
+    wire.write(0x0E);
+    wire.endTransmission(false);
+
+    // Solicita 2 bytes de datos desde el sensor 
+    // (el ángulo está representado en 12 bits distribuidos en dos bytes).
+    wire.requestFrom(AS5600_ADDR, (uint8_t)2);
+
+    if (wire.available() < 2)
+        return 0;
+    // Verifica que la lectura fue exitosa.
+    // Si no hay suficientes datos disponibles, devuelve 0 como valor de seguridad.
+
+    uint8_t high = wire.read();
+    uint8_t low = wire.read();
+    // Lee los dos bytes recibidos:
+    // high: parte alta del ángulo
+    // low: parte baja del ángulo
+
+    return ((high & 0x0F) << 8) | low;
+    // Une los dos bytes recibidos para formar el valor del ángulo del sensor
+    // El sensor envía el ángulo dividido en dos partes (alto y bajo)
+    // Solo 12 bits contienen información útil del ángulo
+    // Se descartan los bits sobrantes del byte alto
+    // Luego se combinan ambos bytes en un solo número
+}
+```
+```c
+// 🔹 DEBUG / PRUEBAS (NO USAR EN PRODUCCIÓN)
+// =======================================================================
+// ⚠️ Solo para pruebas de lectura de angulo
+// Las funciones de DEBUG usan Serial1 (bloqueante).
+// No deben utilizarse durante el control de movimiento en tiempo real,
+// ya que pueden introducir latencias y afectar la estabilidad del sistema.
+void sensorSendAngle(TwoWire &wire) {
+    uint16_t rawAngle = sensorReadAngle(wire); // Leer sensor AS5600
+    float degrees = rawToDegrees(rawAngle);    // Convertir a grados
+    degrees = round1Decimal(degrees);          // Redondear a 1 decimal
+    Serial1.print(degrees, 1);                 // Asegurar envio de solo 1 decimal
+    Serial1.print("\n");
+}
+
+// ⚠️ Solo para pruebas de lectura de angulo continuo
+// ⚠️ Streaming continuo (puede afectar control de motores)
+// -> El envio continuo bloquea movimiento de motores
+void sensorStreamAngle(TwoWire &wire, float &lastSentAngle, unsigned long &lastSendTime) {
+    uint16_t rawAngle = sensorReadAngle(wire);                                 // Leer sensor AS5600
+    float degrees = rawToDegrees(rawAngle);                                    // Convertir a grados
+    degrees = round1Decimal(degrees);                                          // Redondear a 1 decimal
+    sendFilteredFloat(degrees, lastSentAngle, lastSendTime, 0.5, 33, Serial1); // Enviar angulo filtrado por UART
+}
+// 🧠 Resumen conceptual
+// Estas 4 líneas hacen un filtro doble:
+
+// 1️⃣ Filtro por cambio mínimo → evita microvariaciones
+// 2️⃣ Filtro por tiempo → evita saturar el bus
+// - Sin esto pasaba:
+// AS5600 → 1000 lecturas por segundo
+// UART → se llena
+// Pico → recibe mezclado
+// OLED → parpadea y números raros
+// - Con esto pasa:
+// AS5600 → 1000 lecturas
+// Zero → filtra
+// UART → 30 limpias por segundo
+// Pico → feliz
+// OLED → fluido
+```
+```c
+// 🔹 CALCULO DE OFFSET PARA CODIFICADOR AS5600
+// =======================================================================
 // Si alguna vez tu homing mecanico cae cerca del 0 digital del sensor:
 // entonces el promedio normal se rompe
 // Mejor solucion:
@@ -980,44 +1234,25 @@ void homingStepZ(AccelStepper &motor,
 //  240°        120°
 //   210°      150°
 //         180°
-float sensorHomingOffset(TwoWire &wire)
-{
+// Calcula el offset (cero mecánico) del sensor usando varias mediciones.
+// Toma varias lecturas del ángulo cuando el sistema está 
+// en la posición de referencia (homing)
+// Luego calcula el valor promedio para definir ese punto como “cero”
+
+float sensorHomingOffset(TwoWire &wire) {
     const uint8_t samples = 30;
     float sum = 0;
+    // Define cuántas mediciones se van a tomar y una variable para acumular resultados
+
     float firstAngle = rawToDegrees(sensorReadAngle(wire));
-=======
-### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> sensors.h / sensors.cpp**
+    // Toma una primera lectura como referencia inicial
 
-...
-
---------------------------------------------------------------------------
-
-### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> utils.h / utils.cpp**
-
-...
-
---------------------------------------------------------------------------
-
-### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> xy_plane.h / xy_plane.cpp**
-
-...
-
---------------------------------------------------------------------------
-
-### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> z_Axis.h / z_Axis.cpp**
->>>>>>> 287525e (homing)
-
-    for (uint8_t i = 0; i < samples; i++)
-    {
+    // Repite la lectura varias veces para reducir ruido del sensor
+    for (uint8_t i = 0; i < samples; i++) {
         float angle = rawToDegrees(sensorReadAngle(wire));
-        // corregir salto 0° / 360°
-        // fabs -> valor absoluto |angle - firstAngle|
-        // Si la diferencia es mayor que 180°,
-        // significa que cruzamos el cero del sensor.
-        // si cruzamos el cero
-        // mover los valores al mismo lado del círculo
-        if (fabs(angle - firstAngle) > 180)
-        {
+        // Corrige el problema de salto entre 0° y 360°
+        // (Ejemplo: evita que 359° y 1° se interpreten como valores muy lejanos)
+        if (fabs(angle - firstAngle) > 180) {
             if (angle < firstAngle)
                 angle += 360;
             else
@@ -1025,23 +1260,67 @@ float sensorHomingOffset(TwoWire &wire)
         }
         sum += angle;
     }
-    // Normalizar el angulo si el promedio queda fuera del rango
-    // Eso solo mueve el número al rango correcto
-    // Si un cálculo da 361° eso en realidad es lo mismo que 1°
-    // si pasa de 360 → restar 360, si es menor que 0 → sumar 360
-    float offset = sum / samples;
 
+    // Calcula el promedio final → este es el offset del sistema   
+    // Asegura que el resultado quede siempre dentro de 0° a 360°
+    float offset = sum / samples;
     if (offset >= 360)
         offset -= 360;
     if (offset < 0)
         offset += 360;
-
     return offset;
 }
+
+// Convierte la lectura del sensor en el ángulo real del sistema, 
+// aplicando el offset de homing
+// Ajusta el resultado para que siempre quede entre 0° y 360°
+float sensorCorrectedAngle(TwoWire &wire, float offset) {
+    float angle = rawToDegrees(sensorReadAngle(wire)) - offset;
+    if (angle >= 360)
+        angle -= 360;
+    if (angle < 0)
+        angle += 360;
+    return angle;
+}
+```
+
+
+
+
+
+--------------------------------------------------------------------------
+
+### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> utils.h**
+
+...
+
+### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> utils.cpp**
+
 ...
 
 --------------------------------------------------------------------------
 
-### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> utils.h / utils.cpp**
+### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> xy_plane.h**
+
+...
+### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> xy_plane.cpp**
+
+...
+
+--------------------------------------------------------------------------
+
+### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> z_Axis.h**
+
+...
+### **<img src="img/c++.png" width="30" style="position: relative; top: 4px;"> z_Axis.cpp**
+
+...
+
+--------------------------------------------------------------------------
+
+### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> utils.h**
+
+...
+### **<img src="img/c++.png" width="20" style="position: relative; top: 4px;"> utils.cpp**
 
 ...
